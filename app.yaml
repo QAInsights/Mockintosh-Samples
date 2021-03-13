@@ -1,0 +1,46 @@
+management:
+  port: 8000
+
+performanceProfiles:
+  loadprofile:
+    ratio: 0.5
+    delay: 0.1
+    faults:
+      '200': 0.5
+      '500': 0.5
+
+services:
+- name: Search Service
+  performanceProfile: loadprofile
+  hostname: localhost
+  port: 8001
+  endpoints:
+  - path: "/"
+    method: GET
+  - path: "/search?q={{keyword}}"
+    method: POST
+    body:
+      urlencoded:
+        q: '{{keyword}}'
+    response: 'You queried about {{keyword}}. Here are the results:'
+  - path: "/getorder/{{regEx '([0-9]{6})' 'ordernumber'}}"
+    response: 'Here is your order details for : {{ordernumber}}'
+
+- name: Customer Service
+  hostname: localhost
+  port: 8003
+  endpoints:
+  - path: "/customer"
+    response:
+      headers:
+        Content-Type: "application/json; charset=UTF-8"
+      body: "@response/customerdetails.json.hbs"
+
+- name: Auth Service
+  performanceProfile: loadprofile
+  hostname: localhost
+  port: 8002
+  endpoints:
+  - path: "/generateToken"
+    method: GET
+    response: 'Generated Token: {{random.uuid4}}'
